@@ -2,14 +2,14 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 
-// Create uploads folder automatically
+// CREATE UPLOAD FOLDER
 const uploadPath = "uploads";
 
 if (!fs.existsSync(uploadPath)) {
   fs.mkdirSync(uploadPath);
 }
 
-// Storage Configuration
+// STORAGE CONFIG
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, uploadPath);
@@ -17,7 +17,9 @@ const storage = multer.diskStorage({
 
   filename: (req, file, cb) => {
     const uniqueName =
-      Date.now() + "-" + Math.round(Math.random() * 1e9);
+      Date.now() +
+      "-" +
+      Math.round(Math.random() * 1e9);
 
     cb(
       null,
@@ -26,29 +28,38 @@ const storage = multer.diskStorage({
   },
 });
 
-// PDF Validation
+// FILE FILTER
 const fileFilter = (req, file, cb) => {
-  if (file.mimetype === "application/pdf") {
-    cb(null, true);
-  } else {
-    cb(new Error("Only PDF files are allowed"), false);
+
+  // PDF VALIDATION
+  if (file.mimetype !== "application/pdf") {
+    return cb(
+      new Error("Only PDF files are allowed"),
+      false
+    );
   }
+
+  cb(null, true);
 };
 
-// Multer Upload Instance
+// MULTER CONFIG
 const upload = multer({
   storage,
+
   fileFilter,
 
   limits: {
     fileSize: 10 * 1024 * 1024, // 10MB
+    files: 10,
   },
 });
 
-// Single File Upload
-export const singleUpload = upload.single("file");
+// SINGLE FILE
+export const singleUpload =
+  upload.single("file");
 
-// Multiple File Upload
-export const multipleUpload = upload.array("files", 10);
+// MULTIPLE FILES
+export const multipleUpload =
+  upload.array("files", 10);
 
 export default upload;

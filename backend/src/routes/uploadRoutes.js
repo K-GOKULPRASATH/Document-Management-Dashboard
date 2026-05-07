@@ -1,4 +1,10 @@
 import express from "express";
+
+import {
+  uploadSingleFile,
+  uploadMultipleFiles,
+} from "../controllers/uploadController.js";
+
 import {
   singleUpload,
   multipleUpload,
@@ -6,28 +12,21 @@ import {
 
 const router = express.Router();
 
-// Single Upload
+
+// SINGLE FILE UPLOAD
 router.post(
   "/single",
   singleUpload,
-  (req, res) => {
-    res.json({
-      success: true,
-      file: req.file,
-    });
-  }
+  uploadSingleFile
 );
 
-// Multiple Upload
+
+// MULTIPLE FILE UPLOAD
 router.post(
   "/multiple",
   multipleUpload,
-  (req, res) => {
-    res.json({
-      success: true,
-      files: req.files,
-    });
-  }
+  uploadMultipleFiles
 );
+
 
 export default router;

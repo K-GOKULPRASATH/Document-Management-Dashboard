@@ -13,12 +13,22 @@ const pool = new Pool({
   database: process.env.DB_NAME,
 });
 
-pool.connect()
-  .then(() => {
-    console.log("PostgreSQL Connected");
-  })
-  .catch((err) => {
-    console.log("Database Connection Error:", err);
-  });
+export const connectDB = async () => {
+  try {
+    const client = await pool.connect();
+
+    console.log("PostgreSQL Connected Successfully");
+
+    // Release client back to pool
+    client.release();
+
+  } catch (error) {
+    console.log("Database Connection Error");
+
+    console.log(error.message);
+
+    process.exit(1);
+  }
+};
 
 export default pool;
