@@ -1,12 +1,17 @@
 import pool from "../config/db.js";
 
-import { io } from "../server.js";
+import {
+  getIO,
+} from "../sockets/socket.js";
 
 
 // SINGLE FILE SERVICE
 export const singleFileUploadService = async (
   file
 ) => {
+
+  const io = getIO();
+
   try {
 
     const query = `
@@ -58,6 +63,7 @@ export const singleFileUploadService = async (
 export const multipleFileUploadService = async (
   files
 ) => {
+  const io = getIO();
   try {
 
     const uploadedFiles = [];

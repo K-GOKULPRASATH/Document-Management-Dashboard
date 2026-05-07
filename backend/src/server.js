@@ -2,6 +2,9 @@ import dotenv from "dotenv";
 import http from "http";
 import { createDocumentsTable }
 from "./models/documentModel.js";
+import {
+  initializeSocket,
+} from "./sockets/socket.js";
 
 import { Server } from "socket.io";
 
@@ -15,21 +18,8 @@ const PORT = process.env.PORT || 5000;
 
 const server = http.createServer(app);
 
-// SOCKET IO
-export const io = new Server(server, {
-  cors: {
-    origin: "*",
-  },
-});
-
-// SOCKET CONNECTION
-io.on("connection", (socket) => {
-  console.log("Socket Connected:", socket.id);
-
-  socket.on("disconnect", () => {
-    console.log("Socket Disconnected");
-  });
-});
+// INITIALIZE SOCKET
+initializeSocket(server);
 
 // START SERVER
 const startServer = async () => {
