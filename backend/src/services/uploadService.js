@@ -5,6 +5,11 @@ import {
 } from "../sockets/socket.js";
 
 
+ const delay = (ms) =>
+  new Promise((resolve) =>
+    setTimeout(resolve, ms)
+  );
+
 // SINGLE FILE SERVICE
 export const singleFileUploadService = async (
   file
@@ -101,6 +106,8 @@ export const multipleFileUploadService = async (
       );
 
       uploadedFiles.push(result.rows[0]);
+       await delay(1000);
+     
 
       // REALTIME PROGRESS EVENT
       io.emit("uploadProgress", {

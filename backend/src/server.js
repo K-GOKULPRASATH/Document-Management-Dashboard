@@ -5,6 +5,9 @@ from "./models/documentModel.js";
 import {
   initializeSocket,
 } from "./sockets/socket.js";
+import {
+  createNotificationsTable,
+} from "./models/notificationModel.js";
 
 import { Server } from "socket.io";
 
@@ -27,6 +30,7 @@ const startServer = async () => {
 
     await connectDB();
     await createDocumentsTable();
+    await createNotificationsTable();
 
     server.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);

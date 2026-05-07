@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Document Upload Dashboard</title>
+
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      background: #111827;
+      color: white;
+      min-height: 100vh;
+      padding: 40px;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: auto;
+    }
+
+    .title {
+      font-size: 40px;
+      font-weight: bold;
+      margin-bottom: 30px;
+    }
+
+    .upload-box {
+      border: 2px dashed #4b5563;
+      padding: 50px;
+      text-align: center;
+      border-radius: 15px;
+      background: #1f2937;
+      transition: 0.3s;
+      cursor: pointer;
+    }
+
+    .upload-box.dragover {
+      border-color: #3b82f6;
+      background: #1e3a8a;
+    }
+
+    .upload-box h2 {
+      margin-bottom: 10px;
+    }
+
+    .upload-box p {
+      color: #9ca3af;
+    }
+
+    #fileInput {
+      display: none;
+    }
+
+    .btn {
+      margin-top: 20px;
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .btn:hover {
+      background: #1d4ed8;
+    }
+
+    .file-list {
+      margin-top: 25px;
+    }
+
+    .file-item {
+      background: #1f2937;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+    }
+
+    .progress-box {
+      margin-top: 30px;
+      background: #1f2937;
+      padding: 20px;
+      border-radius: 10px;
+    }
+
+    .progress-text {
+      margin-bottom: 10px;
+      font-size: 18px;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 20px;
+      background: #374151;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: #3b82f6;
+      transition: 0.3s;
+    }
+
+    .logs {
+      margin-top: 25px;
+    }
+
+    .log {
+      background: #1f2937;
+      padding: 10px;
+      border-left: 5px solid #3b82f6;
+      margin-bottom: 10px;
+      border-radius: 5px;
+    }
+
+    .success {
+      border-left-color: #10b981;
+    }
+
+    .error {
+      border-left-color: #ef4444;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <h1 class="title">
+      Document Upload Dashboard
+    </h1>
+
+    <div class="upload-box" id="dropArea">
+
+      <h2>Drag & Drop PDF Files</h2>
+
+      <p>
+        or click below to select files
+      </p>
+
+      <input
+        type="file"
+        id="fileInput"
+        multiple
+        accept=".pdf"
+      />
+
+      <button
+        class="btn"
+        id="selectBtn"
+      >
+        Select Files
+      </button>
+
+    </div>
+
+    <div class="file-list" id="fileList"></div>
+
+    <button
+      class="btn"
+      id="uploadBtn"
+    >
+      Upload Files
+    </button>
+
+    <div class="progress-box">
+
+      <div
+        class="progress-text"
+        id="progressText"
+      >
+        Waiting for upload...
+      </div>
+
+      <div class="progress-bar">
+        <div
+          class="progress-fill"
+          id="progressFill"
+        ></div>
+      </div>
+
+    </div>
+
+    <div class="logs" id="logs"></div>
+
+  </div>
+
+  <script>
+
+    const socket =
+      io("http://localhost:5000");
+
+    const dropArea =
+      document.getElementById("dropArea");
+
+    const fileInput =
+      document.getElementById("fileInput");
+
+    const selectBtn =
+      document.getElementById("selectBtn");
+
+    const uploadBtn =
+      document.getElementById("uploadBtn");
+
+    const fileList =
+      document.getElementById("fileList");
+
+    const progressText =
+      document.getElementById("progressText");
+
+    const progressFill =
+      document.getElementById("progressFill");
+
+    const logs =
+      document.getElementById("logs");
+
+    let selectedFiles = [];
+
+    // SELECT BUTTON
+    selectBtn.addEventListener(
+      "click",
+      () => {
+        fileInput.click();
+      }
+    );
+
+    // FILE INPUT
+    fileInput.addEventListener(
+      "change",
+      (e) => {
+
+        selectedFiles =
+          [...e.target.files];
+
+        renderFiles();
+      }
+    );
+
+    // DRAG EVENTS
+    dropArea.addEventListener(
+      "dragover",
+      (e) => {
+
+        e.preventDefault();
+
+        dropArea.classList.add(
+          "dragover"
+        );
+      }
+    );
+
+    dropArea.addEventListener(
+      "dragleave",
+      () => {
+
+        dropArea.classList.remove(
+          "dragover"
+        );
+      }
+    );
+
+    dropArea.addEventListener(
+      "drop",
+      (e) => {
+
+        e.preventDefault();
+
+        dropArea.classList.remove(
+          "dragover"
+        );
+
+        selectedFiles =
+          [...e.dataTransfer.files];
+
+        renderFiles();
+      }
+    );
+
+    // RENDER FILES
+    function renderFiles() {
+
+      fileList.innerHTML = "";
+
+      selectedFiles.forEach((file) => {
+
+        fileList.innerHTML += `
+          <div class="file-item">
+            ${file.name}
+          </div>
+        `;
+      });
+    }
+
+    // UPLOAD FILES
+    uploadBtn.addEventListener(
+      "click",
+      async () => {
+
+        if (
+          selectedFiles.length === 0
+        ) {
+
+          alert("Select files first");
+
+          return;
+        }
+
+        const formData =
+          new FormData();
+
+        selectedFiles.forEach((file) => {
+
+          formData.append(
+            "files",
+            file
+          );
+        });
+
+        try {
+
+          const response =
+            await fetch(
+              "http://localhost:5000/api/upload/multiple",
+              {
+                method: "POST",
+                body: formData,
+              }
+            );
+
+          const data =
+            await response.json();
+
+          console.log(data);
+
+        } catch (error) {
+
+          console.log(error);
+
+        }
+      }
+    );
+
+    // SOCKET EVENTS
+    socket.on(
+      "connect",
+      () => {
+
+        addLog(
+          "Socket Connected",
+          "success"
+        );
+      }
+    );
+
+    socket.on(
+      "uploadProgress",
+      (data) => {
+
+        const percentage =
+          (
+            data.uploaded /
+            data.total
+          ) * 100;
+
+        progressText.innerText =
+          `Uploading ${data.progress}`;
+
+        progressFill.style.width =
+          `${percentage}%`;
+
+        addLog(
+          `${data.fileName} uploaded (${data.progress})`
+        );
+      }
+    );
+
+    socket.on(
+      "uploadCompleted",
+      () => {
+
+        progressText.innerText =
+          "Upload Completed";
+
+        progressFill.style.width =
+          `100%`;
+
+        addLog(
+          "All files uploaded successfully",
+          "success"
+        );
+      }
+    );
+
+    socket.on(
+      "uploadError",
+      (data) => {
+
+        addLog(
+          data.message,
+          "error"
+        );
+      }
+    );
+
+    // LOG FUNCTION
+    function addLog(
+      message,
+      type = ""
+    ) {
+
+      logs.innerHTML += `
+        <div class="log ${type}">
+          ${message}
+        </div>
+      `;
+    }
+
+  </script>
+
+</body>
+
+</html>
